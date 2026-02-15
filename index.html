@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOS Optimization Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #ffffff;
+            --accent: #00ff41;
+            --accent-dim: #00cc33;
+            --border: #1a1a1a;
+            --card-bg: #0f0f0f;
+            --gray: #666666;
+            --warning: #ff3b3b;
+            --info: #00d9ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.65;
+            overflow-x: hidden;
+        }
+
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            padding: 120px 0 80px;
+            position: relative;
+        }
+
+        .title-wrapper {
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 700;
+            line-height: 0.95;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            animation: fadeUp 0.8s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .highlight {
+            color: var(--accent);
+            position: relative;
+            display: inline-block;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--gray);
+            max-width: 600px;
+            animation: fadeUp 0.8s ease 0.2s both;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0;
+            overflow-x: auto;
+            animation: fadeUp 0.8s ease 0.3s both;
+        }
+
+        .nav-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            color: var(--fg);
+        }
+
+        .nav-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .guide-layout {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .guide-block {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 32px;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+
+        .guide-block:hover {
+            border-color: var(--accent-dim);
+        }
+
+        .guide-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .guide-block:hover::before {
+            opacity: 1;
+        }
+
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            gap: 16px;
+        }
+
+        .block-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--fg);
+            line-height: 1.3;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            background: var(--accent);
+            color: var(--bg);
+            border-radius: 2px;
+            font-weight: 600;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tag.warn {
+            background: var(--warning);
+        }
+
+        .tag.info {
+            background: var(--info);
+        }
+
+        .block-desc {
+            color: var(--gray);
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+
+        .benefit-box {
+            background: rgba(0, 255, 65, 0.05);
+            border-left: 2px solid var(--accent);
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .benefit-box strong {
+            color: var(--accent);
+        }
+
+        .steps-container {
+            margin: 24px 0;
+        }
+
+        .steps-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--fg);
+        }
+
+        .step-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-left: 0;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            color: var(--bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .step-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .step-content code {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 0.9em;
+            color: var(--accent);
+        }
+
+        .callout {
+            padding: 16px;
+            margin: 20px 0;
+            border-left: 3px solid;
+            font-size: 0.9rem;
+        }
+
+        .callout.warning {
+            background: rgba(255, 59, 59, 0.05);
+            border-color: var(--warning);
+        }
+
+        .callout.info {
+            background: rgba(0, 217, 255, 0.05);
+            border-color: var(--info);
+        }
+
+        .callout-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .mini-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 16px;
+        }
+
+        .mini-card h4 {
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .mini-card ul {
+            list-style: none;
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        .mini-card li {
+            margin-bottom: 6px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .mini-card li::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 48px 0;
+            text-align: center;
+            color: var(--gray);
+            font-size: 0.875rem;
+            margin-top: 80px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 80px 0 60px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .guide-block {
+                padding: 24px;
+            }
+
+            .nav-tabs {
+                padding-bottom: 0;
+            }
+
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+            background: var(--bg);
+        }
+
+        .scroll-indicator:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-indicator {
+                width: 40px;
+                height: 40px;
+                bottom: 24px;
+                right: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    
+    <div class="container">
+        <header>
+            <h1>BIOS <span class="highlight">OPTIMIZATION</span></h1>
+            <p class="subtitle">Essential firmware configurations for maximum system performance. No bloat, just raw speed.</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('memory')">Memory</button>
+            <button class="nav-tab" onclick="switchTab('gpu')">GPU</button>
+            <button class="nav-tab" onclick="switchTab('power')">Power</button>
+            <button class="nav-tab" onclick="switchTab('advanced')">Advanced</button>
+            <button class="nav-tab" onclick="switchTab('safety')">Safety</button>
+        </nav>
+
+        <!-- Memory Section -->
+        <div class="content-section active" id="memory">
+            <div class="guide-layout">
+                <div class="guide-block">
+                    <div class="block-header">
+                        <h2 class="block-title">XMP / DOCP Profile</h2>
+                        <span class="tag">Essential</span>
+                    </div>
+                    <p class="block-desc">Unlocks your RAM's advertised speed. Most RAM ships underclocked by default to ensure compatibility. Enabling XMP lets it run at the speed you paid for.</p>
+                    
+                    <div class="benefit-box">
+                        <strong>Performance Gain:</strong> 10-30% boost in memory-intensive tasks, games, and compilation times
+                    </div>
+
+                    <div class="steps-container">
+                        <h3 class="steps-title">Configuration Steps</h3>
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">Boot into BIOS using <code>DEL</code> or <code>F2</code> key during POST</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">Navigate to overclocking section:<br>
+                            • ASUS: <code>AI Tweaker</code><br>
+                            • MSI: <code>OC Settings</code><br>
+                            • Gigabyte: <code>M.I.T.</code><br>
+                            • ASRock: <code>OC Tweaker</code></div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">Locate XMP setting (may be labeled <code>D.O.C.P</code> for AMD or <code>A-XMP</code>)</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">Select <code>Profile 1</code> or <code>Enabled</code></div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">Save configuration and reboot (<code>F10</code> typically)</div>
+                        </div>
+                    </div>
+
+                    <div class="callout warning">
+                        <div class="callout-title">⚠ Compatibility Check Required</div>
+                        Verify your motherboard QVL (Qualified Vendor List) supports your RAM's rated speed. Some older boards or CPUs may not handle higher frequencies. If system fails to POST, clear CMOS to reset.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GPU Section -->
+        <div class="content-section" id="gpu">
+            <div class="guide-layout">
+                <div class="guide-block">
+                    <div class="block-header">
+                        <h2 class="block-title">Above 4G Decoding</h2>
+                        <span class="tag">High Impact</span>
+                    </div>
+                    <p class="block-desc">Removes the 4GB address space limitation for PCIe devices. Critical for modern high-end GPUs, especially in multi-GPU configurations or compute workloads.</p>
+                    
+                    <div class="benefit-box">
+                        <strong>Performance Gain:</strong> 5-15% in GPU-bound scenarios, eliminates memory bottlenecks for large VRAM operations
+                    </div>
+
+                    <div class="steps-container">
+                        <h3 class="steps-title">Configuration Steps</h3>
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">Access BIOS configuration</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">Navigate to <code>Advanced</code> → <code>PCI Subsystem Settings</code></div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">Enable <code>Above 4G Decoding</code></div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">If present, also enable <code>Resizable BAR</code> (ReBAR) for additional performance</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">Save and reboot</div>
+                        </div>
+                    </div>
+
+                    <div class="callout info">
+                        <div class="callout-title">💡 Resizable BAR</div>
+                        Modern feature that lets the CPU access entire GPU VRAM instead of 256MB chunks. Requires: GPU with ReBAR support, compatible CPU (Intel 10th gen+ or AMD Zen 3+), UEFI BIOS mode, and Above 4G Decoding enabled. Provides 3-15% gaming performance uplift in supported titles.
+                    </div>
+
+                    <div class="callout warning">
+                        <div class="callout-title">⚠ Legacy Software Warning</div>
+                        Some older applications, particularly certain mining software or legacy games with intrusive DRM, may have compatibility issues. Test thoroughly after enabling.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Power Section -->
+        <div class="content-section" id="power">
+            <div class="guide-layout">
+                <div class="guide-block">
+                    <div class="block-header">
+                        <h2 class="block-title">Fast Boot Configuration</h2>
+                        <span class="tag">Quality of Life</span>
+                    </div>
+                    <p class="block-desc">Reduces POST time by skipping unnecessary hardware checks and compatibility testing.</p>
+
+                    <div class="steps-container">
+                        <h3 class="steps-title">Configuration Steps</h3>
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">Navigate to <code>Boot</code> section in BIOS</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">Set <code>Fast Boot</code> to <code>Enabled</code></div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">Disable <code>Full Screen Logo</code> for faster visual feedback</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">Consider disabling <code>POST delay</code> if available</div>
+                        </div>
+                    </div>
+
+                    <div class="benefit-box">
+                        <strong>Performance Gain:</strong> 20-50% reduction in boot time (typically 5-15 seconds faster)
+                    </div>
+                </div>
+
+                <div class="guide-block">
+                    <div class="block-header">
+                        <h2 class="block-title">Power Management Tuning</h2>
+                        <span class="tag">Advanced</span>
+                    </div>
+                    <p class="block-desc">Configure CPU and PCIe power states for either maximum performance or power efficiency.</p>
+
+                    <div class="two-col">
+                        <div class="mini-card">
+                            <h4>CPU C-States</h4>
+                            <ul>
+                                <li>Location: <code>CPU Configuration</code></li>
+                                <li>Performance: Disable all C-States</li>
+                                <li>Efficiency: Enable C6/C7 states</li>
+                                <li>Impact: 5-10W idle power difference</li>
+                            </ul>
+                        </div>
+                        <div class="mini-card">
+                            <h4>PCIe ASPM</h4>
+                            <ul>
+                                <li>Location: <code>PCIe Configuration</code></li>
+                                <li>Performance: Disabled</li>
+                                <li>Efficiency: L1 or Auto</li>
+                                <li>Impact: Reduced GPU latency when disabled</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout warning">
+                        <div class="callout-title">⚠ Power Consumption Trade-off</div>
+                        Disabling power-saving features increases idle power draw by 10-20W. For desktops, this is negligible. For laptops, expect reduced battery life.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Section -->
+        <div class="content-section" id="advanced">
+            <div class="guide-layout">
+                <div class="guide-block">
+                    <div class="block-header">
+                        <h2 class="block-title">Additional Optimizations</h2>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="mini-card">
+                            <h4>Disable CSM</h4>
+                            <ul>
+                                <li>Pure UEFI boot mode</li>
+                                <li>Required for Windows 11</li>
+                                <li>Faster initialization</li>
+                                <li>Location: <code>Boot → CSM Support</code></li>
+                            </ul>
+                        </div>
+                        <div class="mini-card">
+                            <h4>Hardware Virtualization</h4>
+                            <ul>
+                                <li>Intel: VT-x, VT-d</li>
+                                <li>AMD: SVM Mode, IOMMU</li>
+                                <li>Required for VMs, Docker, WSL2</li>
+                                <li>Location: <code>CPU Configuration</code></li>
+                            </ul>
+                        </div>
+                        <div class="mini-card">
+                            <h4>Fan Control</h4>
+                            <ul>
+                                <li>Custom fan curves</li>
+                                <li>Balance thermal vs acoustic</li>
+                                <li>Set aggressive curves for overclocking</li>
+                                <li>Location: <code>Monitor → Fan Control</code></li>
+                            </ul>
+                        </div>
+                        <div class="mini-card">
+                            <h4>Disable Unused Hardware</h4>
+                            <ul>
+                                <li>Serial/parallel ports</li>
+                                <li>Onboard audio (if using DAC)</li>
+                                <li>Unused SATA controllers</li>
+                                <li>Frees PCIe lanes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Section -->
+        <div class="content-section" id="safety">
+            <div class="guide-layout">
+                <div class="guide-block">
+                    <div class="block-header">
+                        <h2 class="block-title">Safety Protocol</h2>
+                        <span class="tag warn">Critical</span>
+                    </div>
+
+                    <div class="callout warning">
+                        <div class="callout-title">⚠ BIOS Flashing</div>
+                        Never update BIOS unless absolutely necessary (system instability, new CPU support, critical security patches). Failed BIOS updates can permanently brick your motherboard. Always use UPS during flash process.
+                    </div>
+
+                    <div class="steps-container">
+                        <h3 class="steps-title">Best Practices</h3>
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content"><strong>One change at a time</strong> — Test system stability after each modification</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content"><strong>Save BIOS profiles</strong> — Most boards support saving configurations to USB drive</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content"><strong>Know CMOS reset procedures</strong> — Locate jumper, button, or battery removal method before tweaking</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content"><strong>Monitor thermals</strong> — Use HWiNFO64 to track temps under load</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content"><strong>Stress test</strong> — Run Prime95, OCCT, or MemTest86 for 30+ minutes</div>
+                        </div>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="mini-card">
+                            <h4>CMOS Reset Methods</h4>
+                            <ul>
+                                <li>Clear CMOS jumper (consult manual)</li>
+                                <li>Remove CMOS battery (30+ seconds)</li>
+                                <li>Rear I/O clear button (high-end boards)</li>
+                                <li>Power off + hold power button method</li>
+                            </ul>
+                        </div>
+                        <div class="mini-card">
+                            <h4>Stability Testing Tools</h4>
+                            <ul>
+                                <li>Prime95: CPU stress</li>
+                                <li>MemTest86: RAM validation</li>
+                                <li>FurMark: GPU torture test</li>
+                                <li>HWiNFO64: Monitoring suite</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-links">
+                <a href="#">Documentation</a>
+                <a href="#">Contribute</a>
+                <a href="#">Issues</a>
+            </div>
+            <p>Hardware configurations vary by manufacturer. Always consult your motherboard manual.</p>
+            <p style="margin-top: 12px; opacity: 0.5;">Built for the community</p>
+        </footer>
+    </div>
+
+    <div class="scroll-indicator" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</div>
+
+    <script>
+        function switchTab(tabName) {
+            // Remove active class from all tabs and sections
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding section
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Show/hide scroll indicator based on scroll position
+        window.addEventListener('scroll', () => {
+            const indicator = document.querySelector('.scroll-indicator');
+            if (window.scrollY > 300) {
+                indicator.style.opacity = '1';
+            } else {
+                indicator.style.opacity = '0';
+            }
+        });
+    </script>
+</body>
+</html>
